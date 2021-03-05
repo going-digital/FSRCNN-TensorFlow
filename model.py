@@ -38,7 +38,7 @@ class Model(object):
     scale_factors = [[40 + self.padding, 40], [20 + self.padding, 40], [14 + self.padding, 42], [12 + self.padding, 48]]
     self.image_size, self.label_size = scale_factors[self.scale - 1]
 
-    self.stride = self.image_size - self.padding
+    self.stride = self.image_size - self.padding - 1
 
     self.checkpoint_dir = config.checkpoint_dir
     self.output_dir = config.output_dir
@@ -107,29 +107,30 @@ class Model(object):
         batch_images = train_data[idx * self.batch_size : (idx + 1) * self.batch_size]
         batch_labels = train_label[idx * self.batch_size : (idx + 1) * self.batch_size]
 
-        for exp in range(3):
-            if exp==0:
-                images = batch_images
-                labels = batch_labels
-            elif exp==1:
-                k = randrange(3)+1
-                images = np.rot90(batch_images, k, (1,2))
-                labels = np.rot90(batch_labels, k, (1,2))
-            elif exp==2:
-                k = randrange(2)
-                images = batch_images[:,::-1] if k==0 else batch_images[:,:,::-1]
-                labels = batch_labels[:,::-1] if k==0 else batch_labels[:,:,::-1]
-            counter += 1
-            _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: images, self.labels: labels, self.batch: self.batch_size})
-            batch_average += err
+        exp = randrange(3)
+        if exp==0:
+            images = batch_images
+            labels = batch_labels
+        elif exp==1:
+            k = randrange(3)+1
+            images = np.rot90(batch_images, k, (1,2))
+            labels = np.rot90(batch_labels, k, (1,2))
+        elif exp==2:
+            k = randrange(2)+1
+            images = np.flip(batch_images, k)
+            labels = np.flip(batch_labels, k)
 
-            if counter % 10 == 0:
-              print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" \
-                % ((ep+1), counter, time.time() - start_time, err))
+        counter += 1
+        _, err = self.sess.run([self.train_op, self.loss], feed_dict={self.images: images, self.labels: labels, self.batch: self.batch_size})
+        batch_average += err
 
-            # Save every 500 steps
-            if counter % 500 == 0:
-              self.save(counter)
+        if counter % 10 == 0:
+          print("Epoch: [%2d], step: [%2d], time: [%4.4f], loss: [%.8f]" \
+            % ((ep+1), counter, time.time() - start_time, err))
+
+        # Save every 500 steps
+        if counter % 500 == 0:
+          self.save(counter)
 
       batch_average = float(batch_average) / batch_idxs
       if ep < (self.epoch * 0.2):
