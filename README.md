@@ -12,9 +12,9 @@ TensorFlow implementation of the Fast Super-Resolution Convolutional Neural Netw
 ## Usage
 For training: `python main.py`
 <br>
-For testing: `python main.py --train False`
+For testing: `python main.py --notrain`
 
-To use FSCRNN-s instead of FSCRNN: `python main.py --fast True`
+To use FSCRNN-s instead of FSCRNN: `python main.py --fast`
 
 Can specify epochs, learning rate, data directory, etc:
 <br>
